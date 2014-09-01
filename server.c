@@ -28,7 +28,7 @@ void error(const char *msg)
 
 int main(int argc, char *argv[])
 {
-	f	= fopen("Contactos","a+");
+	
 	int sockfd, newsockfd, portno, pid; 
 	socklen_t clilen;
 	struct sockaddr_in serv_addr, cli_addr;
@@ -75,6 +75,7 @@ int main(int argc, char *argv[])
 		if (pid == 0)
 		{ 
 			close(sockfd); 
+			f	= fopen("Contactos","a+");
 			dostuff(newsockfd); 
 			exit(0);
 		} 
@@ -87,26 +88,51 @@ int main(int argc, char *argv[])
 
 void dostuff (int sock)
 {
-	int n,len_inet; 
-	char buffer[256], ip[14]; 
-	struct sockaddr_in addr_inet;    
+	int n,len_inet,existe=0; 
+	char buffer[256], ip[14], linea[30]; 
+	char *token, *nom, *buf, *string;
+	struct sockaddr_in addr_inet;  
 
 	getpeername(sock, (struct sockaddr *)&addr_inet, &len_inet);
 	snprintf(ip,(sizeof(ip)), "%s", (inet_ntoa(addr_inet.sin_addr)));  	
-
 	bzero(buffer,256);
 	n = read(sock,buffer,255);
+
 	if (n < 0)
 		error("ERROR al leer del socket");
+
+	buf = strdup(buffer);	
+	nom = strsep(&buf,":");
 	
 	if(buffer[0]=='&')
 	{
-		
-		fprintf(f,"%s:%s\n",buffer,ip);
+		while(!feof(f))
+		{
+			if(fgets(linea,30,f))
+			{
+				string = strdup(linea);
+				token = strsep(&string,":");
+				
+				if((strcmp(token,nom))!=0)
+				{
+					printf("%s->%s\n",token,nom);
+				}
+				if((strcmp(token,nom))==0)
+				{
+					existe=1;
+				}
+			}
+		}
+		if (!existe)
+		{
+			fprintf(f,"%s:%s\n",buffer,ip);
+			n = write(sock,"1",3); 
+		}
+		else
+			n = write(sock,"0",3); 
 	}
 
 	printf("Aquí está el mensaje: %s\n",buffer); 
-	n = write(sock,"Tengo el mensaje",18); 
 	if (n < 0)
 		error("ERROR al escribir en el socket"); 
 }
