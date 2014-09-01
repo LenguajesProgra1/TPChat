@@ -1,48 +1,52 @@
 #include "funciones.h"
 
-GtkWidget *eNombre,*window;
-int puerto;
+GtkWidget *eNombre,*window,*help;// declaracion de variables
 int caracter;
-char ipser[16];
+char *reg[3];
 
-void Registrar (gchar* usuario)
+void Validacion (GtkWidget *boton, GdkEventKey *event, GtkWidget *entry)//Validacion del entry del frame principal
 {
-    char temp[20];
-    char reg[4];
-    reg[0]= '3';
-    snprintf(temp,(sizeof(temp)),"%s",ipser);
-    bzero(temp,20);
-    sprintf(temp,"%d",caracter);
-    reg[2]= "192.168.0.143";
-    bzero(temp,20);
-    sprintf(temp,"%d",usuario);
-    reg[3]= temp;
-    bzero(temp,20);
-    Cliente(3,&reg);
-}
-
-void Validacion (GtkWidget *boton, GdkEventKey *event)//Validacion del entry del frame principal
-{
+    int registro;
    int largo = (int) g_utf8_strlen(gtk_entry_get_text(GTK_ENTRY(eNombre)), -1);
    if ( largo != 0)
     {
         gchar *str = NULL;
         str = g_strconcat(gtk_entry_get_text(GTK_ENTRY(eNombre)), NULL);
-        Registrar(str);
+        char tkn[(sizeof(str)+1)]={'&'};
+        strcat(tkn,str);
+        reg[3] = tkn;
+        registro = Cliente(3,reg);//envio de parametros
+        if(registro==1)
+        {
+            gtk_widget_destroy(help);
+            entry = Interfaz(0,0);
+        }
+        else
+        {
+            g_print("Ya existe ese nombre de usuario\n");
+            gtk_entry_set_text(GTK_ENTRY(eNombre),"");
+        }
     }
    else
     g_print("Debe ingresar su nombre de usuario\n");
-   
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv) 
+{
+    char tmp[14];
+    char temporal[6];
+    FILE *f;
+
+    reg[0] = "3";
     
-    FILE *f = fopen("puerto.txt","r");//Se lee el archivo del puerto
-    fscanf(f,"%d",&caracter);//puerto	
-    fclose(f);
-    
-    f = fopen("ipServidor.txt","r");//Se lee el archivo de la ip del servidor
-    fgets(ipser,16,f);//ip	
+    f = fopen("ipServidor.txt","r");
+    fgets(tmp,14,f);
+    reg[1] = tmp;    
+    fclose(f);    
+	
+    f = fopen("puerto.txt","r");
+    fgets(temporal,6,f);
+    reg[2] = temporal;    
     fclose(f);
     
 // Declaracion de los punteros de interfaz
@@ -85,6 +89,9 @@ int main(int argc, char** argv) {
     g_signal_connect(window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
     g_signal_connect(G_OBJECT(bSesion), "clicked", G_CALLBACK(Validacion), NULL);
     gtk_widget_show_all(window);
+    
+    help = window;
+    
     gtk_main();
     return 0;
 }
