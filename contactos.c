@@ -1,5 +1,5 @@
 #include "funciones.h"
-
+//char* inf;
 GtkWidget *eContact;
 GtkWidget *window;
 
@@ -9,18 +9,18 @@ void errorInter (GtkWidget *boton, GdkEventKey *event, GtkWidget *entry)//Valida
    if ( largo != 0)
     {
         gchar *str = NULL;
-        char* mensaje;
+        //char* mensaje;
         str = g_strconcat(gtk_entry_get_text(GTK_ENTRY(eContact)), NULL);
         gtk_entry_set_text(GTK_ENTRY(eContact),"");
-        mensaje = chat(0,0,str);
-        g_print("%s",mensaje[0]);
+        entry = chat(0,0,str);
     }
    else
     g_print("Debe ingresar el nombre del contacto\n");
 }
 
-int Interfaz (int argc, char **argv)
+int Interfaz (int argc, char **argv)//,char* info[])
 {
+    //inf = info;
     GtkWidget *vbox;
     GtkWidget *bArch;
     GtkWidget *bMsj;
