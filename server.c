@@ -1,27 +1,11 @@
-#include <stdio.h>
-
-#include <unistd.h>
-
-#include <stdlib.h>
-
-#include <string.h>
-
-#include <sys/types.h>
-
-#include <sys/socket.h> 
-
-#include <netinet/in.h>
-
-#include <sys/unistd.h>
-
-#include <arpa/inet.h>
+#include "servidor.h"
 
 FILE* f;
+char *reg[3];
+int port;
+char puerto[5];
 
-void dostuff(int); 
-
-void error(const char *msg)
-{
+void error(const char *msg){
     perror(msg); 
 	exit(1);
 }
@@ -29,7 +13,7 @@ void error(const char *msg)
 int main(int argc, char *argv[])
 {
 	
-	int sockfd, newsockfd, portno, pid; 
+	int sockfd, newsockfd, pid, portno;
 	socklen_t clilen;
 	struct sockaddr_in serv_addr, cli_addr;
 
@@ -47,6 +31,7 @@ int main(int argc, char *argv[])
 	
 	bzero((char *) &serv_addr, sizeof(serv_addr)); 
 	portno = atoi(argv[1]);
+	port=portno;
 	serv_addr.sin_family = AF_INET; 
 	serv_addr.sin_addr.s_addr = INADDR_ANY; 
 	serv_addr.sin_port = htons(portno);
@@ -91,10 +76,12 @@ void dostuff (int sock)
 	int n,len_inet,existe=0; 
 	char buffer[256], ip[14], linea[30]; 
 	char *token, *nom, *buf, *string;
+	char  *ipCon, *msj;
 	struct sockaddr_in addr_inet;  
 
 	getpeername(sock, (struct sockaddr *)&addr_inet, &len_inet);
 	snprintf(ip,(sizeof(ip)), "%s", (inet_ntoa(addr_inet.sin_addr)));  	
+
 	bzero(buffer,256);
 	n = read(sock,buffer,255);
 
@@ -115,11 +102,12 @@ void dostuff (int sock)
 				
 				if((strcmp(token,nom))!=0)
 				{
-					printf("%s->%s\n",token,nom);
+					existe=0;
 				}
 				if((strcmp(token,nom))==0)
 				{
 					existe=1;
+					break;
 				}
 			}
 		}
@@ -132,7 +120,39 @@ void dostuff (int sock)
 			n = write(sock,"0",3); 
 	}
 
-	printf("Aquí está el mensaje: %s\n",buffer); 
-	if (n < 0)
-		error("ERROR al escribir en el socket"); 
+	if(buffer[0]!='&')
+	{
+		char tkn[(sizeof(nom)+1)]={'&'};
+		strcat(tkn,nom);
+		msj = strsep(&buf,":");
+		while(!feof(f))
+		{
+			if(fgets(linea,30,f))
+			{
+				string = strdup(linea);
+				token = strsep(&string,":");
+				if((strcmp(token,tkn))!=0)
+				{
+					existe=0;
+				}
+				if((strcmp(token,tkn))==0)
+				{
+					existe=1;
+					break;
+				}
+			}
+		}
+		if (existe==1)
+		{
+			ipCon = (strsep(&string,"\n"));
+			reg[0]="3";
+			reg[1]=ipCon;
+			reg[2] = "15557";
+			reg[3]=msj;
+			cliente(3,reg);
+			return;
+		}
+		if (existe==0)
+			printf("No existe ese usuario");
+	}
 }
