@@ -1,0 +1,2 @@
+all:
+	gcc chat.c client.c contactos.c main.c server.c -o main `pkg-config --libs --cflags gtk+-3.0`
